@@ -173,7 +173,7 @@ public class WarMain extends JarMain {
     }
 
     private void launchWebServer(URL jar) throws Exception {
-        URLClassLoader loader = new URLClassLoader(new URL[] {jar});
+        URLClassLoader loader = new URLClassLoader(new URL[] {jar}, Thread.currentThread().getContextClassLoader());
         Thread.currentThread().setContextClassLoader(loader);
         Properties props = getWebserverProperties();
         String mainClass = props.getProperty("mainclass");
