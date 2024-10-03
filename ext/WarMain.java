@@ -17,6 +17,7 @@ import java.net.URLClassLoader;
 import java.net.URL;
 import java.util.Arrays;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Properties;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -66,6 +67,7 @@ public class WarMain extends JarMain {
     static final String MAIN = '/' + WarMain.class.getName().replace('.', '/') + ".class";
     static final String WEBSERVER_PROPERTIES = "/WEB-INF/webserver.properties";
     static final String WEBSERVER_JAR = "/WEB-INF/webserver.jar";
+    static final String LOGGER_JAR = "/WEB-INF/logger.jar";
     static final String WEBSERVER_CONFIG = "/WEB-INF/webserver.xml";
     static final String WEB_INF = "WEB-INF";
     static final String META_INF = "META-INF";
@@ -115,7 +117,8 @@ public class WarMain extends JarMain {
         }
     }
 
-    private URL extractWebserver() throws Exception {
+    private List<URL> extractWebserver() throws Exception {
+        List<URL> jars = new ArrayList<URL>();
         this.webroot = File.createTempFile("warbler", "webroot");
         this.webroot.delete();
         this.webroot.mkdirs();
@@ -136,7 +139,24 @@ public class WarMain extends JarMain {
             outStream.close();
         }
         debug("webserver.jar extracted to " + jarFile.getPath());
-        return jarFile.toURI().toURL();
+        jars.add(jarFile.toURI().toURL());
+        jarStream = new URI("jar", entryPath(LOGGER_JAR), null).toURL().openStream();
+        jarFile = File.createTempFile("logger", ".jar");
+        jarFile.deleteOnExit();
+        outStream = new FileOutputStream(jarFile);
+        try {
+            byte[] buf = new byte[4096];
+            int bytesRead;
+            while ((bytesRead = jarStream.read(buf)) != -1) {
+                outStream.write(buf, 0, bytesRead);
+            }
+        } finally {
+            jarStream.close();
+            outStream.close();
+        }
+        debug("logger.jar extracted to " + jarFile.getPath());
+        jars.add(jarFile.toURI().toURL());
+        return jars;
     }
 
     private Properties getWebserverProperties() throws Exception {
@@ -172,8 +192,8 @@ public class WarMain extends JarMain {
         return props;
     }
 
-    private void launchWebServer(URL jar) throws Exception {
-        URLClassLoader loader = new URLClassLoader(new URL[] {jar}, Thread.currentThread().getContextClassLoader());
+    private void launchWebServer(List<URL> jars) throws Exception {
+        URLClassLoader loader = new URLClassLoader(new URL[] {jars.get(0), jars.get(1)}, Thread.currentThread().getContextClassLoader());
         Thread.currentThread().setContextClassLoader(loader);
         Properties props = getWebserverProperties();
         String mainClass = props.getProperty("mainclass");
@@ -346,7 +366,7 @@ public class WarMain extends JarMain {
     protected int start() throws Exception {
         if ( executable == null ) {
             try {
-                URL server = extractWebserver();
+                List<URL> server = extractWebserver();
                 launchWebServer(server);
             }
             catch (FileNotFoundException e) {

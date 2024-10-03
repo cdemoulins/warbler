@@ -91,10 +91,14 @@ module Warbler
       @artifact = Artifact.new(ENV["MAVEN_REPO"] || "https://repo1.maven.org/maven2",
                                "org.eclipse.jetty", "jetty-runner",
                                ENV["WEBSERVER_VERSION"] || "10.0.24")
+      @logger = Artifact.new(ENV["MAVEN_REPO"] || "https://repo1.maven.org/maven2",
+                               "org.eclipse.jetty", "jetty-slf4j-impl",
+                               ENV["WEBSERVER_VERSION"] || "10.0.24")
     end
 
     def add(jar)
       super
+      jar.files["WEB-INF/logger.jar"] = @logger.local_path
       jar.files["WEB-INF/webserver.xml"] ||= StringIO.new(<<-CONFIG)
 <?xml version="1.0"?>
 <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
