@@ -79,6 +79,7 @@ module Warbler
 
     def add(jar)
       jar.files["WEB-INF/webserver.jar"] = @artifact.local_path
+      jar.files["WEB-INF/logger.jar"] = @logger.local_path
     end
 
     def main_class
@@ -98,7 +99,6 @@ module Warbler
 
     def add(jar)
       super
-      jar.files["WEB-INF/logger.jar"] = @logger.local_path
       jar.files["WEB-INF/webserver.xml"] ||= StringIO.new(<<-CONFIG)
 <?xml version="1.0"?>
 <!DOCTYPE Configure PUBLIC "-//Jetty//Configure//EN" "http://www.eclipse.org/jetty/configure.dtd">
