@@ -117,8 +117,8 @@ public class WarMain extends JarMain {
         }
     }
 
-    private List<URL> extractWebserver() throws Exception {
-        List<URL> jars = new ArrayList<URL>();
+    private URL[] extractWebserver() throws Exception {
+        URL[] jars = new URL[2];
         this.webroot = File.createTempFile("warbler", "webroot");
         this.webroot.delete();
         this.webroot.mkdirs();
@@ -139,7 +139,7 @@ public class WarMain extends JarMain {
             outStream.close();
         }
         debug("webserver.jar extracted to " + jarFile.getPath());
-        jars.add(jarFile.toURI().toURL());
+        jars[0] = jarFile.toURI().toURL();
         jarStream = new URI("jar", entryPath(LOGGER_JAR), null).toURL().openStream();
         jarFile = File.createTempFile("logger", ".jar");
         jarFile.deleteOnExit();
@@ -155,7 +155,7 @@ public class WarMain extends JarMain {
             outStream.close();
         }
         debug("logger.jar extracted to " + jarFile.getPath());
-        jars.add(jarFile.toURI().toURL());
+        jars[1] = jarFile.toURI().toURL();
         return jars;
     }
 
@@ -192,8 +192,8 @@ public class WarMain extends JarMain {
         return props;
     }
 
-    private void launchWebServer(List<URL> jars) throws Exception {
-        URLClassLoader loader = new URLClassLoader(new URL[] {jars.get(0), jars.get(1)}, Thread.currentThread().getContextClassLoader());
+    private void launchWebServer(URL[] jars) throws Exception {
+        URLClassLoader loader = new URLClassLoader(jars);
         Thread.currentThread().setContextClassLoader(loader);
         Properties props = getWebserverProperties();
         String mainClass = props.getProperty("mainclass");
@@ -366,8 +366,7 @@ public class WarMain extends JarMain {
     protected int start() throws Exception {
         if ( executable == null ) {
             try {
-                List<URL> server = extractWebserver();
-                launchWebServer(server);
+                launchWebServer(extractWebserver());
             }
             catch (FileNotFoundException e) {
                 final String msg = e.getMessage();
