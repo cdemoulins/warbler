@@ -6,8 +6,8 @@ gemspec( :jar => 'warbler_jar.jar',
          :source => 'ext' )
 
 properties( 'jruby.plugins.version' => '2.0.1',
-            'jruby.version' => '9.2.21.0',
-            'jetty.version' => '9.4.31.v20200723' )
+            'jruby.version' => '9.4.8.0',
+            'jetty.version' => '10.0.24' )
 
 # dependencies needed for compilation
 scope :provided do
